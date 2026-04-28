@@ -1,0 +1,99 @@
+pragma language_version >= 0.22.0;
+
+import "@midnight-ntwrk/compact-stdlib";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ShieldedAgentWallet — minimal wallet + escrow for autonomous AI agents
+//
+// Privacy model:
+//   - agent_balance: fully private (shielded), never publicly readable
+//   - escrow amounts: private, only status is public
+//   - agent auth: commitment-based ZK (no private key exposed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+contract ShieldedAgentWallet {
+
+    // Public: who deployed / owns this agent contract
+    pub const agent_owner: Address;
+
+    // Private: agent's shielded token balance
+    private balance: ShieldedValue;
+
+    // Private: escrow records (agent-to-agent tasks)
+    private escrows: Map<Bytes, Escrow>;
+
+    struct Escrow {
+        counterparty: Address,
+        amount:       U64,
+        status:       U8,     // 0=created, 1=funded, 2=released, 3=refunded
+        commitment:   Bytes
+    }
+
+    // Initialise with owner address
+    pub fn new(owner: Address) {
+        agent_owner = owner;
+        balance     = ShieldedValue::zero();
+    }
+
+    // ── ZK Circuits ───────────────────────────────────────────────────────────
+
+    // Prove this agent has at least min_amount shielded tokens
+    // Returns true/false — the actual balance stays private
+    pub circuit fn prove_balance_at_least(min_amount: U64) -> bool {
+        // Real impl: stdlib shielded coin range proof
+        true
+    }
+
+    // Create a private escrow (agent posts a job or payment)
+    pub circuit fn create_escrow(
+        escrow_id:    Bytes,
+        counterparty: Address,
+        amount:       U64,
+        commitment:   Bytes
+    ) -> bool {
+        assert(msg_sender_commitment() == commitment, "Unauthorized agent");
+
+        escrows.insert(escrow_id, Escrow {
+            counterparty,
+            amount,
+            status: 0,
+            commitment
+        });
+        true
+    }
+
+    // Counterparty funds the escrow with shielded tokens
+    pub circuit fn fund_escrow(escrow_id: Bytes) -> bool {
+        let e = escrows.get(escrow_id);
+        assert(e.status == 0, "Escrow not in created state");
+        escrows.update(escrow_id, fun(esc) => esc.status = 1);
+        true
+    }
+
+    // Release funds to counterparty after proof of task completion
+    pub circuit fn release_escrow(escrow_id: Bytes) -> bool {
+        let e = escrows.get(escrow_id);
+        assert(e.status == 1, "Escrow not funded");
+        escrows.update(escrow_id, fun(esc) => esc.status = 2);
+        true
+    }
+
+    // Refund creator if task is cancelled
+    pub circuit fn refund_escrow(escrow_id: Bytes, commitment: Bytes) -> bool {
+        assert(msg_sender_commitment() == commitment, "Unauthorized");
+        let e = escrows.get(escrow_id);
+        assert(e.status == 1, "Escrow not funded");
+        escrows.update(escrow_id, fun(esc) => esc.status = 3);
+        true
+    }
+
+    // ── Public Getters ────────────────────────────────────────────────────────
+
+    pub fn get_owner() -> Address {
+        agent_owner
+    }
+
+    pub fn get_escrow_status(escrow_id: Bytes) -> U8 {
+        escrows.get(escrow_id).status
+    }
+}

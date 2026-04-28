@@ -1,0 +1,84 @@
+pragma language_version >= 0.22.0;
+
+import "@midnight-ntwrk/compact-stdlib";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PrivateCredentials — issue, hold, and prove credentials for AI agents
+//
+// Privacy model:
+//   - Credential contents: fully private
+//   - Reputation score: private (only "above threshold" is provable)
+//   - Holder identity: protected by commitment
+//   - Issuer: public constant (trusted authority)
+// ─────────────────────────────────────────────────────────────────────────────
+
+contract PrivateCredentials {
+
+    pub const issuer: Address;
+
+    // Private credential records per agent address
+    private credentials: Map<Address, CredentialRecord>;
+
+    struct CredentialRecord {
+        credential_type: Bytes,   // e.g. "task-completer", "verified-agent"
+        score:           U32,     // reputation score (private)
+        issued_at:       U64,     // block number at issuance
+        commitment:      Bytes    // issuer commitment for auth
+    }
+
+    pub fn new(issuer_address: Address) {
+        issuer = issuer_address;
+    }
+
+    // ── Issuer operations ─────────────────────────────────────────────────────
+
+    // Issue a credential to an agent (only callable by issuer)
+    pub circuit fn issue_credential(
+        to:              Address,
+        credential_type: Bytes,
+        score:           U32,
+        commitment:      Bytes
+    ) -> bool {
+        assert(msg_sender_commitment() == commitment, "Only issuer can grant credentials");
+        credentials.insert(to, CredentialRecord {
+            credential_type,
+            score,
+            issued_at: 0,   // replace with block height in production
+            commitment
+        });
+        true
+    }
+
+    // Update an agent's reputation score privately
+    pub circuit fn update_score(
+        agent:      Address,
+        new_score:  U32,
+        commitment: Bytes
+    ) -> bool {
+        assert(msg_sender_commitment() == commitment, "Only issuer can update scores");
+        credentials.update(agent, fun(r) => r.score = new_score);
+        true
+    }
+
+    // ── Agent ZK proofs ───────────────────────────────────────────────────────
+
+    // Prove this agent has a specific credential type (ZK — type is proven, not revealed)
+    pub circuit fn prove_has_credential(credential_type: Bytes) -> bool {
+        let record = credentials.get(msg_sender());
+        assert(record.credential_type == credential_type, "Credential not held");
+        true
+    }
+
+    // Prove reputation score is above threshold (ZK — exact score stays private)
+    pub circuit fn prove_reputation_above(threshold: U32) -> bool {
+        let record = credentials.get(msg_sender());
+        assert(record.score >= threshold, "Reputation score too low");
+        true
+    }
+
+    // Selective disclosure: reveal credential type but not score
+    // Use only when compliance requires it
+    pub circuit fn disclose_credential_type(agent: Address) -> Bytes {
+        credentials.get(agent).credential_type
+    }
+}
