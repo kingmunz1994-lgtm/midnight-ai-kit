@@ -16,6 +16,7 @@ Built by the team behind [Night Markets](https://github.com/kingmunz1994-lgtm/ni
 1. Copy **[CLAUDE.md](./CLAUDE.md)** into your Claude or Cursor system prompt
 2. Browse `prompts/` for specialized use cases
 3. Check `examples/` and `patterns/` for ready-to-use code
+4. See **[GETTING_STARTED.md](./GETTING_STARTED.md)** to run examples against Midnight preprod
 
 ## What's Inside
 
@@ -37,7 +38,8 @@ Built by the team behind [Night Markets](https://github.com/kingmunz1994-lgtm/ni
 ## Examples
 
 - [Basic Shielded Agent Wallet + Escrow](./examples/basic-shielded-agent/)
-- [Private Credentials](./examples/private-credentials/)
+- [Private Credentials & Reputation](./examples/private-credentials/)
+- [Confidential Escrow (with dispute + nullifiers)](./examples/confidential-escrow/)
 
 ## Patterns
 

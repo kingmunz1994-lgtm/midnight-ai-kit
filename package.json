@@ -1,0 +1,48 @@
+{
+  "name": "midnight-ai-kit",
+  "version": "0.1.0",
+  "description": "Prompts, patterns, and examples for building AI agents on Midnight Network",
+  "type": "module",
+  "scripts": {
+    "compile:shielded-agent": "compact compile examples/basic-shielded-agent/contract.compact examples/basic-shielded-agent/managed/shielded-agent-wallet",
+    "compile:credentials": "compact compile examples/private-credentials/contract.compact examples/private-credentials/managed/private-credentials",
+    "compile:escrow": "compact compile examples/confidential-escrow/contract.compact examples/confidential-escrow/managed/confidential-escrow",
+    "run:shielded-agent": "node --import tsx examples/basic-shielded-agent/agent.ts",
+    "run:credentials": "node --import tsx examples/private-credentials/agent.ts",
+    "run:escrow": "node --import tsx examples/confidential-escrow/agent.ts",
+    "proof-server": "docker run -p 6300:6300 midnightntwrk/proof-server:7.0.0 -- midnight-proof-server -v"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.4.0",
+    "@midnight-ntwrk/compact-runtime": "0.14.0",
+    "@midnight-ntwrk/ledger-v7": "7.0.2",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.4",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-network-id": "4.0.4",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-types": "4.0.4",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-hd": "4.0.4",
+    "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
+    "rxjs": "^7.8.1",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "overrides": {
+    "@midnight-ntwrk/compact-js": "2.4.0",
+    "@midnight-ntwrk/ledger-v7": "7.0.2",
+    "smoldot": "npm:@aspect-build/empty@0.0.0"
+  }
+}

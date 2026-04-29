@@ -40,13 +40,54 @@ contract MyContract {
 }
 ```
 
-Key types: `Address`, `U64`, `U32`, `Bool`, `Bytes`, `ShieldedValue`, `Map<K,V>`
+Key types: `Address`, `U64`, `U32`, `U8`, `Bool`, `Bytes`, `ShieldedValue`, `Map<K,V>`
 
 Key stdlib patterns:
-- `msg_sender_commitment()` — ZK-safe caller auth
-- `assert(condition, "message")` — contract assertions
+- `msg_sender_commitment()` — ZK-safe caller auth (returns `Bytes`)
+- `msg_sender()` — caller's `Address`
+- `assert(condition, "message")` — contract assertions (reverts on failure)
 - `ShieldedValue::zero()` — empty shielded balance
-- `Map.insert(key, value)`, `Map.get(key)`, `Map.update(key, fn)`
+- `Map.insert(key, value)`, `Map.get(key)`, `Map.update(key, fn)`, `Map.member(key)`
+
+Nullifier pattern (prevent replay attacks):
+```compact
+private nullifiers: Map<Bytes, Bool>;
+
+pub circuit fn spend_once(id: Bytes) -> bool {
+    assert(!nullifiers.member(id), "Already used");
+    nullifiers.insert(id, true);
+    true
+}
+```
+
+Conditional expressions:
+```compact
+let status: U8 = condition ? 1 : 0;
+```
+
+## TypeScript SDK — Key Imports
+
+```typescript
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
+import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
+import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
+import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { CompiledContract } from '@midnight-ntwrk/compact-js';
+import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
+import * as ledger from '@midnight-ntwrk/ledger-v7';
+```
+
+ZK config path pattern (after `compact compile`):
+```typescript
+const ZK_CONFIG_PATH = path.resolve(import.meta.dirname, 'managed', 'my-contract');
+const ContractModule = await import(path.join(ZK_CONFIG_PATH, 'contract', 'index.js'));
+const compiled = CompiledContract
+  .make('my-contract', ContractModule.Contract)
+  .pipe(CompiledContract.withCompiledFileAssets(ZK_CONFIG_PATH));
+```
 
 ## When the User Asks for Code
 
@@ -55,6 +96,7 @@ Key stdlib patterns:
 3. Then provide corresponding **TypeScript agent code** using `midnight-js`.
 4. Explain the privacy model: what is hidden, what is provable, what is public.
 5. Include testing guidance where relevant.
+6. Always remind the user to run `compact compile` before running the TypeScript agent.
 
 ## Common AI Agent Patterns
 
