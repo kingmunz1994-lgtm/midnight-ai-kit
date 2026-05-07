@@ -2,7 +2,9 @@
 
 **Battle-tested prompts, patterns & examples for AI developers building on Midnight Network.**
 
-Built by the team behind [Night Markets](https://github.com/kingmunz1994-lgtm/night-markets) — a privacy-first marketplace with a live escrow contract on Midnight Preprod. This kit contains the exact tools, prompts, and Compact patterns we wish we had when wiring ZK circuits, shielded flows, and multi-wallet integration using Claude and Cursor.
+Built by the team behind the [Night ecosystem](https://kingmunz1994-lgtm.github.io/night-hub/) — 9 production apps on Midnight built in a single AI sprint. ZK contracts, frontends, cross-app identity, unified OS dashboard. All open source. This kit contains the exact tools, prompts, and Compact patterns we wish we had when wiring ZK circuits, shielded flows, and multi-wallet integration using Claude and Cursor.
+
+> **The proof:** One builder + Claude Code = 9 apps, one session. See the [full case study](./case-studies/night-ecosystem-sprint.md).
 
 ## Why Midnight for AI Agents?
 
@@ -55,10 +57,16 @@ Built by the team behind [Night Markets](https://github.com/kingmunz1994-lgtm/ni
 | Indexer WS | `wss://indexer.preprod.midnight.network/api/v4/graphql/ws` |
 | Node RPC | `https://rpc.preprod.midnight.network` |
 
+## Vision & Case Studies
+
+- [Night Ecosystem Vision](./vision/NIGHT_ECOSYSTEM_VISION.md) — privacy infrastructure for the AI economy, the Cardano bridge thesis, the AI agent economy
+- [AI Builder Program](./vision/AI_BUILDER_PROGRAM.md) — how network-subsidized AI development works, the Night Score routing model, the IOG/Anthropic pitch
+- [Night Ecosystem Sprint](./case-studies/night-ecosystem-sprint.md) — what was built, how, what the AI got right, SDK gotchas, the replicable pattern
+
 ## Contributing
 
-PRs welcome — especially new patterns and examples extracted from real `night-*` projects.
+PRs welcome — especially new patterns, examples from real `night-*` projects, and case studies from your own Midnight builds.
 
 ---
 
-Built on real Midnight Preprod deployment experience. Star this if you're building privacy-first AI agents.
+Built on real Midnight Preprod deployment experience. Part of the [Night ecosystem](https://kingmunz1994-lgtm.github.io/night-hub/). Star this if you're building privacy-first AI agents.
