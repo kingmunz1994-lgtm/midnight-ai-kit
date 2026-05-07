@@ -6,6 +6,8 @@ Built by the team behind the [Night ecosystem](https://kingmunz1994-lgtm.github.
 
 > **The proof:** One builder + Claude Code = 9 apps, one session. See the [full case study](./case-studies/night-ecosystem-sprint.md).
 
+> **Mainnet is live.** Midnight genesis block: March 30, 2026. Deploy to mainnet with Blockfrost endpoints — see [GETTING_STARTED.md](./GETTING_STARTED.md).
+
 ## Why Midnight for AI Agents?
 
 - **Shielded tokens** — private payments between agents, no on-chain footprint
@@ -49,8 +51,16 @@ Built by the team behind the [Night ecosystem](https://kingmunz1994-lgtm.github.
 - [Private Credential Verification](./patterns/private-credential-verification.md)
 - [Secure Agent Identity](./patterns/agent-identity.md)
 
-## Network Endpoints (Preprod)
+## Network Endpoints
 
+### Mainnet (via Blockfrost — requires API key)
+| Service | URL |
+|---------|-----|
+| Indexer GraphQL | `https://midnight-mainnet.blockfrost.io/api/v0/` |
+| Indexer WS | `wss://midnight-mainnet.blockfrost.io/api/v0/ws` |
+| Node RPC | `https://rpc.midnight-mainnet.blockfrost.io` |
+
+### Preprod
 | Service | URL |
 |---------|-----|
 | Indexer GraphQL | `https://indexer.preprod.midnight.network/api/v4/graphql` |

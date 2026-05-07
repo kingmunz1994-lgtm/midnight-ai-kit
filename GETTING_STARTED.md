@@ -1,12 +1,19 @@
 # Getting Started with Midnight AI Kit
 
-Everything you need to run the examples against Midnight preprod.
+Everything you need to run the examples against Midnight preprod or mainnet.
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js v22.15+ (or 18/20 — all work with current SDK)
 - Docker (for the proof server)
-- A funded preprod wallet (get tNIGHT from the faucet below)
+- A funded wallet (preprod: get tNIGHT from the faucet; mainnet: real NIGHT/DUST)
+
+## 0. Quick scaffold (optional)
+
+If you're starting a fresh project rather than using kit examples:
+```bash
+npx create-midnight-app
+```
 
 ## 1. Install dependencies
 
@@ -15,13 +22,23 @@ cd midnight-ai-kit
 npm install
 ```
 
-## 2. Start the proof server
+## 2. Install the Compact CLI
 
-The proof server generates ZK proofs locally. It must be running before any transaction.
+The `compact` CLI is the new standard build tool (replaces standalone `compactc`):
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+
+compact self update    # keep current
+```
+
+## 3. Start the proof server
+
+The proof server generates ZK proofs locally. Must be running before any transaction.
 
 ```bash
 npm run proof-server
-# Starts on http://127.0.0.1:6300
+# Starts midnightntwrk/proof-server:8.0.3 on http://127.0.0.1:6300
 # First run pulls ~2GB Docker image
 ```
 
@@ -31,35 +48,54 @@ curl http://127.0.0.1:6300/health
 # → {"status":"ok"}
 ```
 
-## 3. Get a funded preprod wallet
+GPU option (faster proving): `github.com/Nocy-io/nocy-gpu-proof-server`
+
+## 4. Install Midnight MCP (recommended for AI-assisted development)
+
+Gives Claude or Cursor live Midnight docs + Compact validation in-session:
+```bash
+npx midnight-mcp@latest
+```
+
+Or add to Claude Desktop / Cursor `settings.json`:
+```json
+{
+  "mcpServers": {
+    "midnight": { "command": "npx", "args": ["-y", "midnight-mcp@latest"] }
+  }
+}
+```
+
+## 5. Get a funded wallet
 
 Generate a seed:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Fund via the faucet:
-- Midnight preprod faucet: https://faucet.preprod.midnight.network
-- You need both tNIGHT (for transactions) and tDUST (for gas fees)
+**Preprod (testing):**
+- Faucet: `https://faucet.preprod.midnight.network`
+- You need both tNIGHT (transactions) and tDUST (gas fees)
 
-## 4. Compile a contract
+**Mainnet:**
+- Get NIGHT/DUST from an exchange or the Midnight ecosystem
+- Requires a Blockfrost API key: `blockfrost.dev`
 
-Each example needs its Compact contract compiled before it can run.
+## 6. Compile a contract
 
 ```bash
-# Compile the shielded agent wallet contract
+# Using compact CLI (current standard)
+compact compile examples/basic-shielded-agent/contracts/ShieldedAgentWallet.compact
+
+# Or via npm scripts
 npm run compile:shielded-agent
-
-# Compile the credentials contract
 npm run compile:credentials
-
-# Compile the confidential escrow contract
 npm run compile:escrow
 ```
 
-This generates the ZK circuit assets into `examples/<name>/managed/`.
+This generates ZK circuit assets into `examples/<name>/managed/`.
 
-## 5. Deploy a contract
+## 7. Deploy a contract
 
 ```bash
 npx midnight-js deploy examples/basic-shielded-agent/managed/shielded-agent-wallet \
@@ -68,7 +104,7 @@ npx midnight-js deploy examples/basic-shielded-agent/managed/shielded-agent-wall
 # Outputs: CONTRACT_ADDRESS=mn1abc...
 ```
 
-## 6. Run an example
+## 8. Run an example
 
 ### Basic Shielded Agent Wallet
 
@@ -89,14 +125,29 @@ CREATOR_SEED=<hex> COUNTERPARTY_SEED=<hex> ARBITER_SEED=<hex> \
 CONTRACT_ADDRESS=<address> npm run run:escrow
 ```
 
-## Network Endpoints (preprod)
+---
 
+## Network Endpoints
+
+### Preprod
 | Service | URL |
 |---------|-----|
 | Indexer (HTTP) | `https://indexer.preprod.midnight.network/api/v4/graphql` |
 | Indexer (WS) | `wss://indexer.preprod.midnight.network/api/v4/graphql/ws` |
 | RPC node | `https://rpc.preprod.midnight.network` |
 | Proof server | `http://127.0.0.1:6300` (local) |
+
+### Mainnet (via Blockfrost)
+| Service | URL |
+|---------|-----|
+| Indexer (HTTP) | `https://midnight-mainnet.blockfrost.io/api/v0/` |
+| Indexer (WS) | `wss://midnight-mainnet.blockfrost.io/api/v0/ws` |
+| RPC node | `https://rpc.midnight-mainnet.blockfrost.io` |
+
+Requires `?project_id=YOUR_BLOCKFROST_KEY` on requests.
+Public alternative: Ankr provides rate-limited public Midnight RPC (no key).
+
+---
 
 ## Troubleshooting
 
@@ -105,30 +156,43 @@ CONTRACT_ADDRESS=<address> npm run run:escrow
 - Check `docker ps` to confirm container is running
 
 **"Wallet not synced"**
-- Preprod can take 1-2 min to sync; the agent will wait automatically
+- Preprod can take 1-2 min to sync on unshielded; the agent waits automatically
+- Never wait on full `isSynced` — only wait on unshielded progress
 
 **"Insufficient dust"**
-- Get tDUST from the faucet — every transaction requires a small dust fee
+- Get tDUST from the preprod faucet — every transaction requires a small dust fee
 
 **"Circuit assets not found"**
-- Run `npm run compile:<example>` before running the agent
+- Run `compact compile <contract>` before running the agent
+
+**"enable is not a function" / "isEnabled is not a function"**
+- DApp Connector API v4 removed these. Use `connect(networkId)` instead.
+- Try `'mainnet'`, `'preprod'`, `'undeployed'` in sequence.
+
+**"fee is not a function" / WalletFacade fee errors**
+- wallet-sdk-facade 3.x split this into `calculateFee()` and `estimateFee()`
 
 **Key types reminder**
-- `AGENT_SEED` / `CREATOR_SEED` / etc. are 64-character hex strings (32 bytes)
+- Seeds are 64-character hex strings (32 bytes)
 - Never commit seeds to git — use `.env` files (already in `.gitignore`)
+
+---
 
 ## Understanding the Privacy Model
 
-Every example explicitly documents what is private vs public. As a rule:
+Every example explicitly documents what is private vs public:
 
-- **Private state** (`private` keyword in Compact) — never readable from outside the contract, only provable via ZK circuits
-- **Public state** (`pub` keyword) — readable by anyone via the indexer
-- **ZK circuits** (`pub circuit fn`) — called on-chain, prove properties of private state without revealing values
+- **Private state** (`private` in Compact) — never readable externally, only provable via ZK circuits
+- **Public state** (`pub`) — readable by anyone via the indexer
+- **ZK circuits** (`pub circuit fn`) — prove properties of private state without revealing values
 - **Commitments** — `msg_sender_commitment()` authenticates callers without exposing private keys
+
+---
 
 ## Next Steps
 
-- Read `CLAUDE.md` for the full Compact language reference
+- Read `CLAUDE.md` for the full Compact language reference and SDK version guide
 - Browse `prompts/` for ready-to-use AI prompts for common patterns
 - Browse `patterns/` for reusable Compact code snippets
+- Check `vision/` for the Night ecosystem builder program and NFP structure
 - Extend examples into a LangGraph or CrewAI agent workflow
