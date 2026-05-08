@@ -67,6 +67,19 @@ Built by the team behind the [Night ecosystem](https://kingmunz1994-lgtm.github.
 | Indexer WS | `wss://indexer.preprod.midnight.network/api/v4/graphql/ws` |
 | Node RPC | `https://rpc.preprod.midnight.network` |
 
+## Official Midnight Resources
+
+| Repo | What it is |
+|------|-----------|
+| [`midnight-local-dev`](https://github.com/midnightntwrk/midnight-local-dev) | Full local network — node + indexer + proof server in one `npm start` |
+| [`learn-compact`](https://github.com/midnightntwrk/learn-compact) | The definitive Compact language guide from IOG |
+| [`compact-playground`](https://github.com/midnightntwrk/compact-playground) | Online IDE — compile, format, diff Compact in browser |
+| [`example-zkloan`](https://github.com/midnightntwrk/example-zkloan) | ZK lending with private credit scoring (Night Lend blueprint) |
+| [`midnight-leaderboard`](https://github.com/midnightntwrk/midnight-leaderboard) | Privacy-preserving scores with 3 disclosure modes (Night Score blueprint) |
+| [`example-battleship`](https://github.com/midnightntwrk/example-battleship) | ZK hidden state game (Night Poker blueprint) |
+| [`midnight-improvement-proposals`](https://github.com/midnightntwrk/midnight-improvement-proposals) | MIPs — protocol direction |
+| [`midnight-expert`](https://github.com/midnightntwrk/midnight-expert) | IOG's official AI/Claude tooling (currently a placeholder — this kit is the working version) |
+
 ## Vision & Case Studies
 
 - [Night Ecosystem Vision](./vision/NIGHT_ECOSYSTEM_VISION.md) — privacy infrastructure for the AI economy, the Cardano bridge thesis, the AI agent economy

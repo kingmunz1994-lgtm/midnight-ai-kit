@@ -8,11 +8,28 @@ Everything you need to run the examples against Midnight preprod or mainnet.
 - Docker (for the proof server)
 - A funded wallet (preprod: get tNIGHT from the faucet; mainnet: real NIGHT/DUST)
 
-## 0. Quick scaffold (optional)
+## 0. Option A — Local dev network (recommended)
+
+The fastest way to develop: run a complete Midnight network locally instead of hitting preprod.
+
+```bash
+git clone https://github.com/midnightntwrk/midnight-local-dev
+cd midnight-local-dev && npm start
+```
+
+This starts three Docker containers automatically:
+- **Node** → `http://localhost:9944`
+- **Indexer/GraphQL** → `http://localhost:8088/api/v1/graphql`
+- **Proof server** → `http://localhost:6300`
+
+Then fund your test wallet (interactive menu — paste your Bech32 address, receive 50,000 NIGHT).
+Lace auto-detects local endpoints — no `.env` changes needed.
+
+## 0. Option B — Quick scaffold
 
 If you're starting a fresh project rather than using kit examples:
 ```bash
-npx create-midnight-app
+npx create-mn-app    # official Midnight scaffold
 ```
 
 ## 1. Install dependencies

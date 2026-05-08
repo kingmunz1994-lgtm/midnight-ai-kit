@@ -86,13 +86,44 @@ npx midnight-mcp@latest
 # { "mcpServers": { "midnight": { "command": "npx", "args": ["-y", "midnight-mcp@latest"] } } }
 ```
 
-### Quick scaffold
+### midnight-local-dev — full local network (recommended for development)
+Runs a complete local Midnight environment in Docker — node, indexer, and proof server together:
 ```bash
-npx create-midnight-app    # community scaffold for new projects
+git clone https://github.com/midnightntwrk/midnight-local-dev
+cd midnight-local-dev && npm start
+```
+Fixed local endpoints (Lace auto-detects these):
+```
+Node:    http://localhost:9944
+Indexer: http://localhost:8088/api/v1/graphql
+Proof:   http://localhost:6300
+```
+Auto-funds test accounts with 50,000 NIGHT. Use this instead of preprod during development.
+
+### compact-playground — online IDE
+Compile, format, analyze, and diff Compact contracts in the browser — no local setup:
+`github.com/midnightntwrk/compact-playground`
+
+### learn-compact — official Compact guide
+The definitive reference for the Compact language from IOG/Midnight:
+`github.com/midnightntwrk/learn-compact`
+
+### Quick scaffold (official)
+```bash
+npx create-mn-app    # official Midnight scaffold (midnightntwrk/create-mn-app)
+```
+
+### CI — Compact compiler GitHub Action
+```yaml
+- uses: midnightntwrk/setup-compact-action@v1   # installs compactc in CI
 ```
 
 ### OpenZeppelin Compact Tools
 `github.com/OpenZeppelin/compact-tools` — shared Compact development utilities.
+
+### midnight-expert (IOG's official Claude AI tooling)
+`github.com/midnightntwrk/midnight-expert` — IOG's official AI tooling repo for Midnight.
+Currently a placeholder (1 commit). **midnight-ai-kit is the working implementation.**
 
 ### Node.js
 Use **Node.js v22.15+**. The iterator bugs that affected earlier v22 versions are fixed. Node 18/20 also work.
@@ -257,6 +288,50 @@ const readyFilter = (s: any) =>
 - **Confidential coordination** — multiple agents coordinate without revealing strategies
 
 ---
+
+## Official Reference Examples (midnightntwrk org)
+
+Map official examples to patterns before building from scratch:
+
+| Official repo | Pattern | Relevant to |
+|--------------|---------|-------------|
+| `example-zkloan` | ZK credit scoring, batched migration, private loan state | Night Lend |
+| `midnight-leaderboard` | Privacy-preserving score tracking, 3 disclosure modes | Night Score |
+| `example-battleship` | ZK hidden state, two-party game, private board | Night Poker |
+| `example-bboard` | Bulletin board with React UI template | Night Markets listing |
+| `example-nft-contracts` | NFT minting, ownership, transfer | Night Biz loyalty tokens |
+| `example-kitties` | ZK collectibles | Night Fun token launch |
+| `example-private-party` | Private membership/access control | Night ID gating |
+| `midnight-tip-jar` | Simple shielded payment receiver | Agent-to-agent payments |
+| `example-locker` | Private vault with unlock conditions | Night Save |
+
+### Privacy-preserving identity pattern (from midnight-leaderboard)
+```compact
+// Store identity as hash — never reveal the public key directly
+let ownerHash: Bytes = persistentHash(publicKey);
+
+// Three disclosure modes: anonymous / truncated address / custom name
+pub circuit fn submitScore(score: U64, useCustomName: Bool) -> bool {
+    // ownerHash links entries to owner without revealing identity
+    entries.insert(nextId, ScoreEntry { score, ownerHash });
+    nextId = nextId + 1;
+    true
+}
+```
+
+### Batched migration pattern (from example-zkloan)
+ZK circuits require fixed computation. For operations on variable-length history,
+process in fixed-size batches across multiple transactions:
+```compact
+// Track batch progress on-chain
+pub const migrationBatchIndex: U64;
+
+pub circuit fn migrateNextBatch() -> bool {
+    // process BATCH_SIZE items starting at migrationBatchIndex
+    // caller repeats until migrationBatchIndex == totalItems
+    true
+}
+```
 
 ## Example: Commitment-Based Auth (from Night Markets)
 
