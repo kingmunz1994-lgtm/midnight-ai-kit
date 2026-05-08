@@ -333,6 +333,64 @@ pub circuit fn migrateNextBatch() -> bool {
 }
 ```
 
+### Cross-app reputation pattern (Night Score / recordAction)
+Public score accumulator readable from the indexer — no ZK proof needed for display.
+Trusted app registry prevents arbitrary callers from awarding points.
+```compact
+// Public ledger — indexer-readable, no proof required
+export ledger actionScore: Map<Bytes<32>, Uint<32>>;
+export ledger trustedApps: Map<Bytes<32>, Boolean>;
+export ledger appCount:    Uint<8>;
+
+// Admin registers a trusted app by its commitment
+export circuit registerApp(appCommitment: Bytes<32>): Boolean {
+  const caller = callerCommitment(pad(32, "nightid:admin"));
+  assert(disclose(caller) == adminCommitment, "admin only");
+  assert(trustedApps.member(appCommitment) == false, "already registered");
+  trustedApps.insert(appCommitment, true);
+  appCount = appCount + 1;
+  round.increment(1);
+  return true;
+}
+
+// Trusted app awards points — caller proves its commitment is registered
+export circuit recordAction(holderCom: Bytes<32>, points: Uint<8>): Uint<32> {
+  const appCom = callerCommitment(pad(32, "nightid:app"));
+  assert(trustedApps.member(disclose(appCom)) == true, "untrusted app");
+  assert(points > 0 && points <= 50, "invalid points");
+
+  var current: Uint<32> = 0;
+  if (actionScore.member(holderCom)) { current = actionScore.lookup(holderCom); }
+  const newTotal: Uint<32> = current + Uint<32>(points);
+  actionScore.insert(holderCom, newTotal);
+  round.increment(1);
+  return newTotal;
+}
+```
+
+API-level wiring (v1 — before on-chain deployment):
+```typescript
+// POST /api/nightid/record-action
+// Called by any Night app after a user action completes
+const POINTS: Record<string, number> = {
+  'night-markets': 50,  // escrow settled
+  'night-work':    40,  // task completed
+  'night-lend':    30,  // repaid on time
+  'night-fun':     25,  // token launched
+  'night-poker':   15,  // hand played
+  'night-save':    10,  // vault deposit
+  'night-biz':     10,  // tier verified
+};
+
+// Wire into escrow release — fire-and-forget
+const prev = _nightScoreStore.get(sellerAddress) ?? 0;
+_nightScoreStore.set(sellerAddress, prev + 50);
+
+// GET /api/nightid/action-score/:address
+// Returns: { total, threshold200, byApp, eventCount }
+// threshold200: boolean — AI Builder Program quality gate
+```
+
 ## Example: Commitment-Based Auth (from Night Markets)
 
 ```compact
