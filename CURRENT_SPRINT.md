@@ -9,61 +9,57 @@ Every Claude session working on the Night ecosystem must:
 
 ---
 
-## Last Session Summary (2026-05-13)
+## Last Session Summary (2026-05-13 — continued)
 
 ### What Was Done
-- **nightid-api.ts** (`action-score` endpoint): Added `spent` and `available` fields to `GET /api/nightid/action-score/:addr` response. `available = total - spent` so frontends show true spendable NIGHT balance.
-- **night-hub**: Added `fetchPokerCount()` — fetches `/api/poker/tables` on load, shows live table count in hero badge ("🃏 N poker tables live") and inline in dashboard "Live on Midnight" header. Fixed NIGHT Balance stat to use `available` instead of `total`.
-- **night-fun** (`launch.js`): Wired `recordAction` — bonding curve launch (+20pts), token buy (+10pts), token sell (+5pts). Token deploy already covered via `awardNightScore('token')` (+25pts).
-- **night-lend** (`lend.js`): Wired `recordAction` — deposit (+20pts), repay (+15pts), withdraw (+10pts). Borrow was already wired (+30pts).
-- **night-work** (`work.js`): Wired `recordAction` — accept task (+20pts), post task (+25pts). Submit proof was already wired (+40pts).
-- **night-save** (`vault.js`): Wired `recordAction` — mint sUSD (+20pts), repay debt (+10pts), redeem collateral (+5pts). Deposit was already wired (+10pts).
-- **night-biz** (`biz.js`): Wired `recordAction` — epoch close (+15pts). Token deploy was already wired (+10pts).
-- **night-markets main**: Merged feature branch `claude/night-fun-feature-5hJ9W` into main. Railway now serves the updated `nightid-api.ts` with `spent/available` in action-score.
-- **LAUNCH_ROADMAP.md**: Updated to 2026-05-08 truth (phase 1+2 complete, phases 3-9 documented).
+**Previous work (same calendar date, earlier context):**
+- `nightid-api.ts`: Added `spent` + `available` to action-score endpoint
+- `night-hub`: live poker table count, `available` NIGHT balance
+- All 5 standalone app frontends: `recordAction` wired for all major actions
+- `night-poker` deploy.ts: fixed `pathToFileURL` (Windows ESM) + `privateStoragePasswordProvider` (new SDK requirement)
+
+**This context — Night Poker Tier 1 UX (commit `3ff3969`):**
+- **sounds.js** (`public/js/sounds.js`): `NightSounds` object — Web Audio API engine, zero audio files. Covers: `deal`, `shuffle`, `chip`, `yourTurn`, `fold`, `check`, `call`, `raise`, `allIn`, `win`, `newCard`, `tick`, `toggle`.
+- **history.js** (`public/js/history.js`): `NightHistory` object — tracks last 20 hands in localStorage. Session stats: hands played, win%, VPIP%, biggest pot. Renders hand history modal + provably fair panel.
+- **game.js**: Integrated sounds at every action point. `flyChip()` animation (chip flies from seat to pot center). `NightHistory.addHand()` called on showdown and walkover. `yourTurn` sound + 5-second countdown ticks. Session stats strip show/hide. Added missing `checkStreetOver()` function.
+- **index.html**: 🔊 sound toggle + 📋 History buttons in nav. Session stats mini-strip (hands/win%/VPIP/best-pot) + ⊘ Verify Fair button. Provably Fair modal (XOR key + SHA-256 commitment + hole cards + explanation). Hand History modal (last 20 hands). Script tags for sounds.js and history.js added before game.js.
 
 ### Commits This Session
-- `night-markets` main: `0fa8bb4` (merge — spent/available in action-score, all feature branch changes)
-- `night-hub` master: `a6fe080` (live poker count, available NIGHT balance)
-- `night-fun` main: `6d2f84f` (record-action: curve, buy, sell)
-- `night-lend` main: `fcf4a9a` (record-action: deposit, repay, withdraw)
-- `night-work` main: `61e7209` (record-action: accept, post)
-- `night-save` main: `eeab2b8` (record-action: mint, repay, redeem)
-- `night-biz` main: `a191f24` (record-action: epoch close)
+- `night-poker` main: `3ff3969` (Tier 1 poker UX — sounds, history, stats, fair panel, chip animations)
+- `night-poker` main: `c3cabe3` (privateStoragePasswordProvider fix)
+- `night-poker` main: `8793840` (pathToFileURL ESM fix)
 
-### Railway Status
-- Auto-deploys from night-markets main ✅
-- After 2026-05-13 push: `GET /api/nightid/action-score/:addr` now returns `spent` + `available` fields
+### Night Poker Deploy Status
+- deploy.ts is fixed and ready (two SDK patches applied)
+- User was running `npx tsx scripts/deploy.ts` with Docker proof server active
+- CONTRACT_ADDRESS not yet received — user needs to paste output when deploy completes
+- When received: update `.env`, `CLAUDE.md` contracts table, wire commitHand/claimPot in nightid-api.ts
 
 ---
 
 ## Next Session — Pick Up Here
 
-**Phase 3 is the blocker.** Everything after it depends on contracts being deployed.
-Phase 3 requires a local machine with Docker running the proof server — cannot be done remotely.
+### Priority order:
 
-### If the user has Docker available (Phase 3 work):
-1. Start proof server: `npm run proof-server` in any repo
-2. Deploy night-poker first (highest user visibility):
-   ```bash
-   cd /home/user/night-poker
-   npm install
-   # artifacts already compiled — skip npm run compile
-   npm run deploy
-   # record CONTRACT_ADDRESS
-   ```
-3. After deploy: wire `commitHand`/`claimPot` into nightid-api.ts WS handler
-4. Move to night-fun, then night-lend, etc. in priority order
+**1. Night poker contract address** (if user has output from `npx tsx scripts/deploy.ts`):
+- Record `CONTRACT_ADDRESS=<addr>` in night-poker `.env`
+- Update CLAUDE.md contracts table
+- Wire `commitHand` / `claimPot` in `nightid-api.ts` WS handler
 
-### If Docker is not available (Phase 5/6/8 work):
-1. **Test night-store Printful integration** — place a real test order via:
-   ```
-   POST https://night-markets-94-production.up.railway.app/api/store/checkout
-   { "address": "test_addr", "items": [{"productId":"mug","size":"11oz","qty":1}], "shipping": {...} }
-   ```
-2. **Night Hub leaderboard** — query Redis top-N addresses by score, render in hub dashboard (Phase 6)
-3. **Phase 8 polish** — `parseDustAmt()` fix and wallet poll backoff across all standalone app frontends
-4. **Write NightID.compact** — the identity contract is the only missing contract (Phase 4)
+**2. Night Hub leaderboard** (Phase 6 — no Docker needed):
+- In `night-hub/public/js/hub.js`, query `GET /api/nightid/leaderboard?limit=10` (needs to be created in nightid-api.ts first)
+- In `nightid-api.ts`: add `GET /api/nightid/leaderboard` — reads Redis sorted set `night_score` top-N, returns `[{address, score}]`
+- Render table in hub dashboard
+
+**3. Test night-store Printful integration** (Phase 5):
+```
+POST https://night-markets-94-production.up.railway.app/api/store/checkout
+{ "address": "test_addr", "items": [{"productId":"mug","size":"11oz","qty":1}], "shipping": {...} }
+```
+
+**4. If Docker available (Phase 3):**
+- night-fun contract deploy (after poker is done)
+- Order: night-fun → night-lend → night-save → night-work → night-biz
 
 ---
 
