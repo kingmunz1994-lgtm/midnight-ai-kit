@@ -9,31 +9,32 @@ Every Claude session working on the Night ecosystem must:
 
 ---
 
-## Last Session Summary (2026-05-13 — continued)
+## Last Session Summary (2026-05-13 — context 3)
 
 ### What Was Done
-**Previous work (same calendar date, earlier context):**
-- `nightid-api.ts`: Added `spent` + `available` to action-score endpoint
-- `night-hub`: live poker table count, `available` NIGHT balance
-- All 5 standalone app frontends: `recordAction` wired for all major actions
-- `night-poker` deploy.ts: fixed `pathToFileURL` (Windows ESM) + `privateStoragePasswordProvider` (new SDK requirement)
 
-**This context — Night Poker Tier 1 UX (commit `3ff3969`):**
-- **sounds.js** (`public/js/sounds.js`): `NightSounds` object — Web Audio API engine, zero audio files. Covers: `deal`, `shuffle`, `chip`, `yourTurn`, `fold`, `check`, `call`, `raise`, `allIn`, `win`, `newCard`, `tick`, `toggle`.
-- **history.js** (`public/js/history.js`): `NightHistory` object — tracks last 20 hands in localStorage. Session stats: hands played, win%, VPIP%, biggest pot. Renders hand history modal + provably fair panel.
-- **game.js**: Integrated sounds at every action point. `flyChip()` animation (chip flies from seat to pot center). `NightHistory.addHand()` called on showdown and walkover. `yourTurn` sound + 5-second countdown ticks. Session stats strip show/hide. Added missing `checkStreetOver()` function.
-- **index.html**: 🔊 sound toggle + 📋 History buttons in nav. Session stats mini-strip (hands/win%/VPIP/best-pot) + ⊘ Verify Fair button. Provably Fair modal (XOR key + SHA-256 commitment + hole cards + explanation). Hand History modal (last 20 hands). Script tags for sounds.js and history.js added before game.js.
+**Night Poker Tier 1 UX (previous context — commit `3ff3969`):**
+- `sounds.js`, `history.js`, `game.js`, `index.html` in night-poker — sounds, chip animations, hand history, provably fair panel
+
+**This context — Night Markets UX + Leaderboard API:**
+- **`night-markets/sounds.js`** (new): `NightSounds` IIFE — Web Audio API engine for marketplace. 10 sounds: `addToCart`, `click`, `bid`, `zkProof`, `escrow`, `checkout`, `listing`, `mint`, `tick`, `priceUpdate`.
+- **`scripts/nightid-api.ts`** (v1.4.0): In-memory leaderboard `Map<string, number>`. `leaderboardUpdate()` / `leaderboardPersist()` / `leaderboardLoad()`. Persists top-100 as JSON to Redis key `ns:leaderboard`. `GET /api/nightid/leaderboard?limit=N` endpoint (max 100, default 10). Returns `{leaderboard:[{rank,address,score}], total}`.
+- **`index.html`** (night-markets): Sound calls wired at 9 action points — addToCart, removeItem, commitBid, zkProof, executeReveal, coConfirm, createListing, confirmCheckout, mintVaultItem.
+- **`night-hub`** leaderboard UI: `fetchLeaderboard()` in hub.js, `#leaderboard-list` section in tab-home with rank medals (🥇🥈🥉), truncated addresses, level badges, score. CSS added to hub.css.
 
 ### Commits This Session
-- `night-poker` main: `3ff3969` (Tier 1 poker UX — sounds, history, stats, fair panel, chip animations)
-- `night-poker` main: `c3cabe3` (privateStoragePasswordProvider fix)
-- `night-poker` main: `8793840` (pathToFileURL ESM fix)
+- `night-markets` branch `claude/night-fun-feature-5hJ9W`: `9bb4f3e` (marketplace sounds, leaderboard API, sound wiring)
+- `night-hub` master: `cd87571` (Night Score leaderboard in hub dashboard)
 
 ### Night Poker Deploy Status
-- deploy.ts is fixed and ready (two SDK patches applied)
-- User was running `npx tsx scripts/deploy.ts` with Docker proof server active
-- CONTRACT_ADDRESS not yet received — user needs to paste output when deploy completes
-- When received: update `.env`, `CLAUDE.md` contracts table, wire commitHand/claimPot in nightid-api.ts
+- deploy.ts is fixed and ready
+- CONTRACT_ADDRESS not yet received — user needs to paste output when `npx tsx scripts/deploy.ts` completes
+- When received: update `.env`, `CLAUDE.md` contracts table, wire commitHand/claimPot in nightid-api.ts WS handler
+
+### Pending: Merge to main
+- `night-markets` branch `claude/night-fun-feature-5hJ9W` has the leaderboard API + marketplace sounds
+- Must be merged into `main` for Railway to deploy the new `/api/nightid/leaderboard` endpoint
+- Until merged, the hub leaderboard shows "unavailable"
 
 ---
 
@@ -41,15 +42,14 @@ Every Claude session working on the Night ecosystem must:
 
 ### Priority order:
 
-**1. Night poker contract address** (if user has output from `npx tsx scripts/deploy.ts`):
+**1. Merge night-markets feature branch → main** (so Railway deploys leaderboard API):
+- `git checkout main && git merge claude/night-fun-feature-5hJ9W && git push origin main`
+- Or create a PR on GitHub
+
+**2. Night poker contract address** (if user has output from `npx tsx scripts/deploy.ts`):
 - Record `CONTRACT_ADDRESS=<addr>` in night-poker `.env`
 - Update CLAUDE.md contracts table
 - Wire `commitHand` / `claimPot` in `nightid-api.ts` WS handler
-
-**2. Night Hub leaderboard** (Phase 6 — no Docker needed):
-- In `night-hub/public/js/hub.js`, query `GET /api/nightid/leaderboard?limit=10` (needs to be created in nightid-api.ts first)
-- In `nightid-api.ts`: add `GET /api/nightid/leaderboard` — reads Redis sorted set `night_score` top-N, returns `[{address, score}]`
-- Render table in hub dashboard
 
 **3. Test night-store Printful integration** (Phase 5):
 ```
@@ -57,7 +57,10 @@ POST https://night-markets-94-production.up.railway.app/api/store/checkout
 { "address": "test_addr", "items": [{"productId":"mug","size":"11oz","qty":1}], "shipping": {...} }
 ```
 
-**4. If Docker available (Phase 3):**
+**4. Total .night names count in hub** (Phase 6):
+- Query nightid-api.ts `GET /api/nightid/names` or equivalent, show count in hub stats
+
+**5. If Docker available (Phase 3):**
 - night-fun contract deploy (after poker is done)
 - Order: night-fun → night-lend → night-save → night-work → night-biz
 
@@ -74,7 +77,7 @@ POST https://night-markets-94-production.up.railway.app/api/store/checkout
 ### Phase 6 — Cross-App Integration + Night Hub Live Data
 - [x] Active poker table count in hub UI ✅ done 2026-05-13
 - [x] NIGHT Balance shows `available` not `total` in hub ✅ done 2026-05-13
-- [ ] Night Score leaderboard in hub (query Redis top-N)
+- [x] Night Score leaderboard in hub (query Redis top-N) ✅ done 2026-05-13 (needs main merge to go live)
 - [ ] Total .night names count in hub
 
 ---
