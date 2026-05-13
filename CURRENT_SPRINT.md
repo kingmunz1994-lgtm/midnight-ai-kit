@@ -9,27 +9,31 @@ Every Claude session working on the Night ecosystem must:
 
 ---
 
-## Last Session Summary (2026-05-08)
+## Last Session Summary (2026-05-13)
 
 ### What Was Done
-- **night-store**: Full pivot to shopper-first UI — product grid, sliding cart, NIGHT token checkout via Printful API. Night Score balance used as NIGHT (total - spent).
-- **nightid-api.ts**: Added 4 store endpoints (`/api/store/products`, `/api/store/estimate`, `/api/store/checkout`, `/api/store/order/:id`). Added poker WebSocket room server (`/ws/poker/{tableId}`) and table registry (`/api/poker/tables`, `POST /api/poker/tables`). ScoreData now tracks `spent` field.
-- **night-hub**: Fixed app count (9 not 10), updated Night Store description, added `night-store` to APP_ICONS, fixed demo score to include night-store, NIGHT Balance label updated.
-- **night-poker**: Dynamic WS URL (localhost vs Railway), live table loading from API with fallback, `submitCreateTable` posts to API, compiled artifacts committed, DEMO_TABLES IDs match API defaults.
-- **night-print.svg**: Created Night Markets branded Printful design file, committed to night-store.
-- **All 5 standalone repos** (night-fun, night-lend, night-work, night-save, night-biz): Updated proof-server 7.0.0 → 8.0.3 in package.json.
-- **LAUNCH_ROADMAP.md**: Updated to 2026-05-08 truth with all phases and current state.
+- **nightid-api.ts** (`action-score` endpoint): Added `spent` and `available` fields to `GET /api/nightid/action-score/:addr` response. `available = total - spent` so frontends show true spendable NIGHT balance.
+- **night-hub**: Added `fetchPokerCount()` — fetches `/api/poker/tables` on load, shows live table count in hero badge ("🃏 N poker tables live") and inline in dashboard "Live on Midnight" header. Fixed NIGHT Balance stat to use `available` instead of `total`.
+- **night-fun** (`launch.js`): Wired `recordAction` — bonding curve launch (+20pts), token buy (+10pts), token sell (+5pts). Token deploy already covered via `awardNightScore('token')` (+25pts).
+- **night-lend** (`lend.js`): Wired `recordAction` — deposit (+20pts), repay (+15pts), withdraw (+10pts). Borrow was already wired (+30pts).
+- **night-work** (`work.js`): Wired `recordAction` — accept task (+20pts), post task (+25pts). Submit proof was already wired (+40pts).
+- **night-save** (`vault.js`): Wired `recordAction` — mint sUSD (+20pts), repay debt (+10pts), redeem collateral (+5pts). Deposit was already wired (+10pts).
+- **night-biz** (`biz.js`): Wired `recordAction` — epoch close (+15pts). Token deploy was already wired (+10pts).
+- **night-markets main**: Merged feature branch `claude/night-fun-feature-5hJ9W` into main. Railway now serves the updated `nightid-api.ts` with `spent/available` in action-score.
+- **LAUNCH_ROADMAP.md**: Updated to 2026-05-08 truth (phase 1+2 complete, phases 3-9 documented).
 
 ### Commits This Session
-- `night-markets` main: `59d81b3` (store endpoints), `7cd8963` (poker WS + table API)
-- `night-store` main: `d3bb2b0` (shopper UI + night-print.svg)
-- `night-hub` master: `c4938c8` (app count, descriptions, icons)
-- `night-poker` main: `c1b98d6` (live tables, dynamic WS, compiled artifacts)
-- `night-fun`, `night-lend`, `night-work`, `night-save`, `night-biz`: proof-server 8.0.3 fix
+- `night-markets` main: `0fa8bb4` (merge — spent/available in action-score, all feature branch changes)
+- `night-hub` master: `a6fe080` (live poker count, available NIGHT balance)
+- `night-fun` main: `6d2f84f` (record-action: curve, buy, sell)
+- `night-lend` main: `fcf4a9a` (record-action: deposit, repay, withdraw)
+- `night-work` main: `61e7209` (record-action: accept, post)
+- `night-save` main: `eeab2b8` (record-action: mint, repay, redeem)
+- `night-biz` main: `a191f24` (record-action: epoch close)
 
 ### Railway Status
 - Auto-deploys from night-markets main ✅
-- New endpoints live after redeploy: `/api/store/*`, `/api/poker/tables`, `/ws/poker/*`
+- After 2026-05-13 push: `GET /api/nightid/action-score/:addr` now returns `spent` + `available` fields
 
 ---
 
@@ -57,10 +61,25 @@ Phase 3 requires a local machine with Docker running the proof server — cannot
    POST https://night-markets-94-production.up.railway.app/api/store/checkout
    { "address": "test_addr", "items": [{"productId":"mug","size":"11oz","qty":1}], "shipping": {...} }
    ```
-2. **Night Hub live data** — wire active poker table count to hub UI (already in `/api/poker/tables`)
-3. **Expose `spent` in action-score API** — add `available: s.total - (s.spent ?? 0)` to response
-4. **Add `record-action` calls** in night-fun, night-lend, night-save, night-work, night-biz frontends
-5. **Write NightID.compact** — the identity contract is the only missing contract
+2. **Night Hub leaderboard** — query Redis top-N addresses by score, render in hub dashboard (Phase 6)
+3. **Phase 8 polish** — `parseDustAmt()` fix and wallet poll backoff across all standalone app frontends
+4. **Write NightID.compact** — the identity contract is the only missing contract (Phase 4)
+
+---
+
+## Phase 5 / Phase 6 Completion Status
+
+### Phase 5 — Night Store + Night Score Polish
+- [ ] Test real Printful order (needs user to run POST with real shipping address)
+- [ ] Verify night-print.svg loads at GitHub Pages URL
+- [x] `spent` + `available` exposed in action-score API ✅ done 2026-05-13
+- [x] `record-action` calls wired in all 5 standalone app frontends ✅ done 2026-05-13
+
+### Phase 6 — Cross-App Integration + Night Hub Live Data
+- [x] Active poker table count in hub UI ✅ done 2026-05-13
+- [x] NIGHT Balance shows `available` not `total` in hub ✅ done 2026-05-13
+- [ ] Night Score leaderboard in hub (query Redis top-N)
+- [ ] Total .night names count in hub
 
 ---
 
