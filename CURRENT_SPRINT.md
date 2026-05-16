@@ -9,7 +9,73 @@ Every Claude session working on the Night ecosystem must:
 
 ---
 
-## Last Session Summary (2026-05-13 — context 3)
+## Last Session Summary (2026-05-16)
+
+### What Was Done
+
+**Night Markets UX + Leaderboard API (previous context):**
+- `sounds.js` (new): `NightSounds` marketplace sound engine
+- `scripts/nightid-api.ts` v1.4.0: leaderboard endpoint + in-memory Map
+- `index.html`: 9 sound wiring points
+- `night-hub`: leaderboard UI (hub.js + index.html + hub.css)
+
+**This context:**
+- Merged `claude/night-fun-feature-5hJ9W` → `main` in night-markets (Railway now live with leaderboard API)
+- **DApp Connector v4 migration** across all 7 affected repos:
+  - Replaced `connector.enable()` with `connect(networkId)`
+  - Added robust `parseDustAmt()` helper (handles bigint/object/string)
+  - Added `getUnshieldedAddress()` + `getShieldedAddresses()` fallback for address
+  - Added `getDustBalance()` + `getUnshieldedBalances()` for balance
+  - Added poll backoff (stops after 3 failures to prevent APIError spam when locked)
+  - Added `midnight#ready` event listener for late-injecting wallets (1AM, GSD)
+  - Repos updated: night-biz, night-lend, night-save, night-work, night-fun, night-id, night-poker
+
+### Commits This Context
+- `night-markets` main: feature branch merged (leaderboard API live on Railway)
+- `night-biz` main: `a8a1f9b` (DApp Connector v4)
+- `night-lend` main: `14a6b21` (DApp Connector v4)
+- `night-save` main: `837d2ec` (DApp Connector v4)
+- `night-work` main: `0592aae` (DApp Connector v4)
+- `night-fun` main: `862894b` (DApp Connector v4)
+- `night-id` main: `ba5b263` (DApp Connector v4)
+- `night-poker` main: `aff637b` (DApp Connector v4)
+
+### Research findings this session (key items)
+- OZ Compact contracts: on runtime 0.14.0 (one behind us) — borrow patterns not code
+- **Add `Pausable` to NightMarketsEscrow** — OZ pattern, ~10 lines, emergency stop
+- **Add `Initializable` guard** to all contracts — prevents re-init attacks
+- **`persistentCommit<T>` for poker hole cards** — without this, ZK showdown doesn't actually prove card integrity (Brick Towers seabattle solved this)
+- **Use Brick Towers identity pattern** as blueprint for NightID.compact (Phase 4)
+- **`computeAccountId()` pure circuit** — standardize identity derivation across contracts
+- Official counter example uses midnight-js-* ^4.0.4 — verify pinned in package.json
+
+---
+
+## Next Session — Pick Up Here
+
+### Priority order:
+
+**1. Add `Pausable` circuit to `NightMarketsEscrow.compact`** (OZ pattern):
+- `export ledger _isPaused: Boolean;`
+- `export circuit pause(): []` / `export circuit unpause(): []` (admin only)
+- `assertNotPaused()` guard on createListing, fundEscrow, releaseEscrow
+
+**2. Fix `persistentCommit` hole cards in `NightPoker.compact`**:
+- Cards currently not committed on-chain — showdown ZK proof doesn't prove integrity
+- Pattern from Brick Towers seabattle: `persistentCommit<Hand>(hole_cards, persistentHash([sk, kernel.self().bytes]))`
+- Store commitment on ledger at deal time, verify at showdown
+
+**3. Night poker contract deploy** (when Docker available):
+- `npx tsx scripts/deploy.ts` — user needs to run this
+- When CONTRACT_ADDRESS received: update `.env`, CLAUDE.md table, wire commitHand/claimPot
+
+**4. End-to-end test night-markets escrow flow**:
+- `npm run serve` + Lace with preprod tDUST
+- createListing → fundEscrow → releaseEscrow in browser
+
+**5. Submit PR to midnight-awesome-dapps** for ecosystem visibility
+
+**6. Test night-store Printful integration** (Phase 5)
 
 ### What Was Done
 
